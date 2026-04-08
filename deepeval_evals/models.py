@@ -60,4 +60,4 @@ def generate_response(
 
     response = litellm.completion(**kwargs)
 
-    return response.choices[0].message.content
+    return response.choices[0].message.content or ""

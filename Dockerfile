@@ -10,9 +10,7 @@ RUN apt update -q \
 WORKDIR /app
 
 COPY requirements.txt .
-COPY src/requirements.txt ./src/requirements.txt
-RUN pip install -r requirements.txt -r src/requirements.txt
+RUN pip install -r requirements.txt
 
 COPY deepeval_evals/ ./deepeval_evals/
 COPY evals-cymraeg/ ./evals-cymraeg/
-COPY src/ ./src/

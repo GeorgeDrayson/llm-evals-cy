@@ -24,6 +24,8 @@ def generate_response(
     user_message: str,
     temperature: float = 0,
     max_tokens: int = 500,
+    *,
+    enable_thinking: bool | None = None,
 ) -> str:
     """Call any LLM via litellm's unified interface.
 
@@ -37,6 +39,11 @@ def generate_response(
 
     Models prefixed with "hf/" are routed to the local HF inference server
     (set HF_SERVER_URL env var, defaults to http://hf-server:8000/v1).
+
+    enable_thinking:
+        If False, sends extra_body chat_template_kwargs enable_thinking=false (vLLM
+        and other OpenAI-compatible servers that support it). If True, forces
+        enable_thinking true. If None, omits (server default).
 
     See https://docs.litellm.ai/docs/providers for all supported providers.
     """
@@ -57,6 +64,16 @@ def generate_response(
         kwargs["api_base"] = HF_SERVER_URL
         kwargs["custom_llm_provider"] = "openai"
         kwargs["api_key"] = "none"
+        if enable_thinking is not None:
+            # vLLM OpenAI-compatible API (extra_body merged into JSON body)
+            kwargs["extra_body"] = {
+                "chat_template_kwargs": {"enable_thinking": enable_thinking},
+            }
+    elif enable_thinking is not None:
+        raise ValueError(
+            "enable_thinking is only supported for hf/ models (OpenAI-compatible local server). "
+            "Use --model hf/... with HF_SERVER_URL pointing at vLLM."
+        )
 
     response = litellm.completion(**kwargs)
 

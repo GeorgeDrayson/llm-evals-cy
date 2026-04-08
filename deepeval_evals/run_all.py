@@ -13,8 +13,8 @@ import csv
 import json
 import os
 import re
-import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
 from deepeval.test_case import LLMTestCase
@@ -72,6 +72,19 @@ EVALS = {
 }
 
 
+def _generate_one(item: tuple) -> tuple[int, str]:
+    """Run one completion; returns (index, text) so callers can preserve golden order."""
+    idx, model_id, max_tokens, system_message, user_message, enable_thinking = item
+    actual = generate_response(
+        model_id,
+        system_message,
+        user_message,
+        max_tokens=max_tokens,
+        enable_thinking=enable_thinking,
+    )
+    return idx, actual
+
+
 def _score_sample(metric: str, actual: str, expected: str) -> float:
     """Score a single sample. Returns 1.0 for correct, 0.0 for incorrect (or BLEU placeholder)."""
     if metric == "mcq":
@@ -83,7 +96,15 @@ def _score_sample(metric: str, actual: str, expected: str) -> float:
     return 0.0
 
 
-def run_eval(eval_name: str, model_id: str, max_samples: int = None, details_dir: str = None, max_tokens_override: int = None):
+def run_eval(
+    eval_name: str,
+    model_id: str,
+    max_samples: int = None,
+    details_dir: str = None,
+    max_tokens_override: int = None,
+    max_concurrent: int = 1,
+    enable_thinking: bool | None = None,
+):
     config = EVALS[eval_name]
     jsonl_path = os.path.join(BASE_DIR, config["jsonl"])
 
@@ -95,16 +116,35 @@ def run_eval(eval_name: str, model_id: str, max_samples: int = None, details_dir
     goldens = load_jsonl_goldens(jsonl_path, max_samples=max_samples)
     print(f"Loaded {len(goldens)} samples")
 
-    test_cases = []
-    predictions = []
-    references = []
     details = []
 
     max_tokens = max_tokens_override or config.get("max_tokens", 500)
-    for i, g in enumerate(tqdm(goldens, desc="Generating responses")):
-        actual = generate_response(model_id, g.system_message, g.user_message, max_tokens=max_tokens)
-        predictions.append(actual)
-        references.append(g.expected_output)
+    n = len(goldens)
+    predictions = [""] * n
+    references = [g.expected_output for g in goldens]
+
+    if max_concurrent <= 1:
+        for i, g in enumerate(tqdm(goldens, desc="Generating responses")):
+            _, actual = _generate_one(
+                (i, model_id, max_tokens, g.system_message, g.user_message, enable_thinking)
+            )
+            predictions[i] = actual
+    else:
+        work = [
+            (i, model_id, max_tokens, g.system_message, g.user_message, enable_thinking)
+            for i, g in enumerate(goldens)
+        ]
+        with ThreadPoolExecutor(max_workers=max_concurrent) as pool:
+            futures = {pool.submit(_generate_one, w): w[0] for w in work}
+            with tqdm(total=n, desc="Generating responses") as pbar:
+                for fut in as_completed(futures):
+                    idx, actual = fut.result()
+                    predictions[idx] = actual
+                    pbar.update(1)
+
+    test_cases = []
+    for i, g in enumerate(goldens):
+        actual = predictions[i]
         test_cases.append(LLMTestCase(
             input=g.user_message,
             actual_output=actual,
@@ -147,7 +187,30 @@ def main():
     parser.add_argument("--max-tokens", type=int, default=None, help="Override max generation tokens (default: per-eval setting, typically 500)")
     parser.add_argument("--output-dir", default="results", help="Directory to save results (default: results)")
     parser.add_argument("--save-details", action="store_true", help="Save per-sample details (input, output, expected, score) as JSONL")
+    parser.add_argument(
+        "--max-concurrent",
+        type=int,
+        default=8,
+        help="Parallel completion requests (default: 8). Use 1 for sequential. Match your server (e.g. vLLM --max-num-seqs).",
+    )
+    thinking = parser.add_mutually_exclusive_group()
+    thinking.add_argument(
+        "--no-thinking",
+        action="store_true",
+        help="Disable model thinking/reasoning trace (vLLM: extra_body chat_template_kwargs enable_thinking=false).",
+    )
+    thinking.add_argument(
+        "--thinking",
+        action="store_true",
+        help="Force enable_thinking=true in the request (when server supports it).",
+    )
     args = parser.parse_args()
+
+    enable_thinking: bool | None = None
+    if args.no_thinking:
+        enable_thinking = False
+    elif args.thinking:
+        enable_thinking = True
 
     model_id = args.model
     if model_id.startswith("hf/"):
@@ -168,7 +231,15 @@ def main():
 
     summaries = []
     for name in eval_names:
-        summary = run_eval(name, model_id, args.max_samples, details_dir=details_dir, max_tokens_override=args.max_tokens)
+        summary = run_eval(
+            name,
+            model_id,
+            args.max_samples,
+            details_dir=details_dir,
+            max_tokens_override=args.max_tokens,
+            max_concurrent=args.max_concurrent,
+            enable_thinking=enable_thinking,
+        )
         summaries.append(summary)
 
     elapsed = time.time() - start

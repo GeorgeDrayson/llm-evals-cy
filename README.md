@@ -65,18 +65,18 @@ HF_SERVER_URL=http://localhost:8000/v1 python -m deepeval_evals.run_all --model 
 
 ## Yr evals sydd ar gael / Available evals
 
-| Eval | Metrig / Metric | Disgrifiad (CY) | Description (EN) |
-|------|-----------------|------------------|------------------|
-| `welsh-lexicon` | accuracy | Adnabod geiriau Cymraeg | Recognising Welsh words |
-| `welsh-grammar` | accuracy | Gramadeg Cymraeg | Welsh grammar |
-| `welsh-yes-no` | accuracy | Ateb cwestiynau ie/na yn Gymraeg | Answering yes/no questions in Welsh |
-| `welsh-obscenities` | accuracy | Adnabod rhegfeydd Cymraeg | Recognising Welsh profanities |
-| `welsh-bilingual-placenames` | accuracy | Cyfieithu enwau lleoedd | Translating place names |
-| `welsh-legislation-translation` | BLEU | Cyfieithu deddfwriaeth Saesneg-Cymraeg | English-to-Welsh legislation translation |
-| `welsh-registers` | accuracy | Adnabod cofrestrau iaith | Recognising language registers |
-| `welsh-mmlu-lite` | accuracy | Cwestiynau aml-ddewis MMLU yn Gymraeg | MMLU multiple-choice questions in Welsh |
-| `welsh-toxigen` | accuracy | Adnabod iaith wenwynig Cymraeg | Recognising toxic Welsh language |
-| `welsh-arc-easy-mini-cy` | accuracy | Cwestiynau gwyddoniaeth aml-ddewis ARC-Easy yn Gymraeg | ARC-Easy science multiple-choice questions in Welsh |
+| Eval | Metrig / Metric | Samplau / Samples | Disgrifiad (CY) | Description (EN) |
+|------|-----------------|-------------------|------------------|------------------|
+| `welsh-lexicon` | accuracy | 14,083 | Adnabod geiriau Cymraeg | Recognising Welsh words |
+| `welsh-grammar` | accuracy | 991 | Gramadeg Cymraeg | Welsh grammar |
+| `welsh-yes-no` | accuracy | 268 | Ateb cwestiynau ie/na yn Gymraeg | Answering yes/no questions in Welsh |
+| `welsh-obscenities` | accuracy | 230 | Adnabod rhegfeydd Cymraeg | Recognising Welsh profanities |
+| `welsh-bilingual-placenames` | accuracy | 660 | Cyfieithu enwau lleoedd | Translating place names |
+| `welsh-legislation-translation` | BLEU | 3,003 | Cyfieithu deddfwriaeth Saesneg-Cymraeg | English-to-Welsh legislation translation |
+| `welsh-registers` | accuracy | 875 | Adnabod cofrestrau iaith | Recognising language registers |
+| `welsh-mmlu-lite` | accuracy | 400 | Cwestiynau aml-ddewis MMLU yn Gymraeg | MMLU multiple-choice questions in Welsh |
+| `welsh-toxigen` | accuracy | 905 | Adnabod iaith wenwynig Cymraeg | Recognising toxic Welsh language |
+| `welsh-arc-easy-mini-cy` | accuracy | 50 | Cwestiynau gwyddoniaeth aml-ddewis ARC-Easy yn Gymraeg | ARC-Easy science multiple-choice questions in Welsh |
 
 ---
 

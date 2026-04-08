@@ -10,6 +10,7 @@ Usage:
 
 import argparse
 import csv
+import json
 import os
 import re
 import sys
@@ -71,7 +72,18 @@ EVALS = {
 }
 
 
-def run_eval(eval_name: str, model_id: str, max_samples: int = None):
+def _score_sample(metric: str, actual: str, expected: str) -> float:
+    """Score a single sample. Returns 1.0 for correct, 0.0 for incorrect (or BLEU placeholder)."""
+    if metric == "mcq":
+        m = re.search(r'\b([A-D])\b', actual)
+        extracted = m.group(1) if m else actual.strip()
+        return 1.0 if extracted == expected.strip() else 0.0
+    elif metric == "exact_match":
+        return 1.0 if actual.strip().strip(".,!?").lower() == expected.strip().strip(".,!?").lower() else 0.0
+    return 0.0
+
+
+def run_eval(eval_name: str, model_id: str, max_samples: int = None, details_dir: str = None, max_tokens_override: int = None):
     config = EVALS[eval_name]
     jsonl_path = os.path.join(BASE_DIR, config["jsonl"])
 
@@ -86,8 +98,9 @@ def run_eval(eval_name: str, model_id: str, max_samples: int = None):
     test_cases = []
     predictions = []
     references = []
+    details = []
 
-    max_tokens = config.get("max_tokens", 500)
+    max_tokens = max_tokens_override or config.get("max_tokens", 500)
     for i, g in enumerate(tqdm(goldens, desc="Generating responses")):
         actual = generate_response(model_id, g.system_message, g.user_message, max_tokens=max_tokens)
         predictions.append(actual)
@@ -97,17 +110,26 @@ def run_eval(eval_name: str, model_id: str, max_samples: int = None):
             actual_output=actual,
             expected_output=g.expected_output,
         ))
+        if details_dir is not None:
+            score = _score_sample(config["metric"], actual, g.expected_output)
+            details.append({
+                "input": g.user_message,
+                "expected": g.expected_output,
+                "output": actual,
+                "score": score,
+            })
+
+    if details_dir is not None:
+        os.makedirs(details_dir, exist_ok=True)
+        details_path = os.path.join(details_dir, f"{eval_name}.jsonl")
+        with open(details_path, "w") as f:
+            for d in details:
+                f.write(json.dumps(d, ensure_ascii=False) + "\n")
+        print(f"Details saved to {details_path}")
 
     # Summary
     if config["metric"] in ("exact_match", "mcq"):
-        if config["metric"] == "mcq":
-            # Extract first A/B/C/D letter from the response
-            def extract_mcq(text):
-                m = re.search(r'\b([A-D])\b', text)
-                return m.group(1) if m else text.strip()
-            correct = sum(1 for tc in test_cases if extract_mcq(tc.actual_output) == tc.expected_output.strip())
-        else:
-            correct = sum(1 for tc in test_cases if tc.actual_output.strip().strip(".,!?").lower() == tc.expected_output.strip().strip(".,!?").lower())
+        correct = sum(1 for tc in test_cases if _score_sample(config["metric"], tc.actual_output, tc.expected_output))
         accuracy = correct / len(test_cases) * 100
         print(f"\nAccuracy: {accuracy:.2f}% ({correct}/{len(test_cases)})")
         return {"eval": eval_name, "metric": "accuracy", "score": f"{accuracy:.2f}", "n": len(test_cases)}
@@ -122,6 +144,9 @@ def main():
     parser.add_argument("--model", required=True, help="LLM model ID (e.g. gpt-4o, anthropic/claude-sonnet-4-20250514, ollama/llama3)")
     parser.add_argument("--eval", choices=list(EVALS.keys()), help="Run a specific eval (default: all)")
     parser.add_argument("--max-samples", type=int, default=None, help="Limit number of samples per eval")
+    parser.add_argument("--max-tokens", type=int, default=None, help="Override max generation tokens (default: per-eval setting, typically 500)")
+    parser.add_argument("--output-dir", default="results", help="Directory to save results (default: results)")
+    parser.add_argument("--save-details", action="store_true", help="Save per-sample details (input, output, expected, score) as JSONL")
     args = parser.parse_args()
 
     model_id = args.model
@@ -131,22 +156,26 @@ def main():
         model_id = f"hf/{actual_model}"
 
     eval_names = [args.eval] if args.eval else list(EVALS.keys())
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    model_slug = model_id.replace("/", "_")
+
+    details_dir = None
+    if args.save_details:
+        details_dir = os.path.join(args.output_dir, "details", f"{timestamp}_{model_slug}")
 
     print(f"Running {len(eval_names)} eval(s) with model: {model_id}")
     start = time.time()
 
     summaries = []
     for name in eval_names:
-        summary = run_eval(name, model_id, args.max_samples)
+        summary = run_eval(name, model_id, args.max_samples, details_dir=details_dir, max_tokens_override=args.max_tokens)
         summaries.append(summary)
 
     elapsed = time.time() - start
 
     # Write summary CSV
-    results_dir = os.path.join(os.path.dirname(__file__), "..", "results")
+    results_dir = args.output_dir
     os.makedirs(results_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    model_slug = model_id.replace("/", "_")
     csv_path = os.path.join(results_dir, f"{timestamp}_{model_slug}.csv")
 
     with open(csv_path, "w", newline="") as f:

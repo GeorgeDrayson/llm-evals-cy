@@ -63,20 +63,20 @@ make eval MODEL=hf/auto EVAL=welsh-lexicon
 HF_SERVER_URL=http://localhost:8000/v1 python -m deepeval_evals.run_all --model hf/auto
 ```
 
-## Yr evals sydd ar gael
+## Yr evals sydd ar gael / Available evals
 
-| Eval | Metrig | Disgrifiad |
-|------|--------|------------|
-| `welsh-lexicon` | accuracy | Adnabod geiriau Cymraeg |
-| `welsh-grammar` | accuracy | Gramadeg Cymraeg |
-| `welsh-yes-no` | accuracy | Ateb cwestiynau ie/na yn Gymraeg |
-| `welsh-obscenities` | accuracy | Adnabod rhegfeydd Cymraeg |
-| `welsh-bilingual-placenames` | accuracy | Cyfieithu enwau lleoedd |
-| `welsh-legislation-translation` | BLEU | Cyfieithu deddfwriaeth Saesneg-Cymraeg |
-| `welsh-registers` | accuracy | Adnabod cofrestrau iaith |
-| `welsh-mmlu-lite` | accuracy | Cwestiynau aml-ddewis MMLU yn Gymraeg |
-| `welsh-toxigen` | accuracy | Adnabod iaith wenwynig Cymraeg |
-| `welsh-arc-easy-mini-cy` | accuracy | Cwestiynau gwyddoniaeth aml-ddewis ARC-Easy yn Gymraeg |
+| Eval | Metrig / Metric | Disgrifiad (CY) | Description (EN) |
+|------|-----------------|------------------|------------------|
+| `welsh-lexicon` | accuracy | Adnabod geiriau Cymraeg | Recognising Welsh words |
+| `welsh-grammar` | accuracy | Gramadeg Cymraeg | Welsh grammar |
+| `welsh-yes-no` | accuracy | Ateb cwestiynau ie/na yn Gymraeg | Answering yes/no questions in Welsh |
+| `welsh-obscenities` | accuracy | Adnabod rhegfeydd Cymraeg | Recognising Welsh profanities |
+| `welsh-bilingual-placenames` | accuracy | Cyfieithu enwau lleoedd | Translating place names |
+| `welsh-legislation-translation` | BLEU | Cyfieithu deddfwriaeth Saesneg-Cymraeg | English-to-Welsh legislation translation |
+| `welsh-registers` | accuracy | Adnabod cofrestrau iaith | Recognising language registers |
+| `welsh-mmlu-lite` | accuracy | Cwestiynau aml-ddewis MMLU yn Gymraeg | MMLU multiple-choice questions in Welsh |
+| `welsh-toxigen` | accuracy | Adnabod iaith wenwynig Cymraeg | Recognising toxic Welsh language |
+| `welsh-arc-easy-mini-cy` | accuracy | Cwestiynau gwyddoniaeth aml-ddewis ARC-Easy yn Gymraeg | ARC-Easy science multiple-choice questions in Welsh |
 
 ---
 
@@ -144,18 +144,3 @@ make eval MODEL=hf/auto EVAL=welsh-lexicon
 # Set HF_SERVER_URL to point at your server
 HF_SERVER_URL=http://localhost:8000/v1 python -m deepeval_evals.run_all --model hf/auto
 ```
-
-## Available evals
-
-| Eval | Metric | Description |
-|------|--------|-------------|
-| `welsh-lexicon` | accuracy | Recognising Welsh words |
-| `welsh-grammar` | accuracy | Welsh grammar |
-| `welsh-yes-no` | accuracy | Answering yes/no questions in Welsh |
-| `welsh-obscenities` | accuracy | Recognising Welsh profanities |
-| `welsh-bilingual-placenames` | accuracy | Translating place names |
-| `welsh-legislation-translation` | BLEU | English-to-Welsh legislation translation |
-| `welsh-registers` | accuracy | Recognising language registers |
-| `welsh-mmlu-lite` | accuracy | MMLU multiple-choice questions in Welsh |
-| `welsh-toxigen` | accuracy | Recognising toxic Welsh language |
-| `welsh-arc-easy-mini-cy` | accuracy | ARC-Easy science multiple-choice questions in Welsh |

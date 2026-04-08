@@ -58,6 +58,9 @@ make eval MODEL=gpt-4o EVAL=welsh-lexicon
 # Mae hf/auto yn canfod pa fodel mae'r gweinydd yn ei weini yn awtomatig
 make eval MODEL=hf/auto EVAL=welsh-lexicon
 
+# Unrhyw weinydd OpenAI-cyfatebol (vLLM, llama.cpp, ac ati)
+# Gosodwch HF_SERVER_URL i bwyntio at eich gweinydd
+HF_SERVER_URL=http://localhost:8000/v1 python -m deepeval_evals.run_all --model hf/auto
 ```
 
 ## Yr evals sydd ar gael
@@ -136,6 +139,10 @@ make eval MODEL=gpt-4o EVAL=welsh-lexicon
 # Local HuggingFace server (see infra/hf-server)
 # hf/auto automatically detects which model the server is serving
 make eval MODEL=hf/auto EVAL=welsh-lexicon
+
+# Any OpenAI-compatible server (vLLM, llama.cpp, etc.)
+# Set HF_SERVER_URL to point at your server
+HF_SERVER_URL=http://localhost:8000/v1 python -m deepeval_evals.run_all --model hf/auto
 ```
 
 ## Available evals

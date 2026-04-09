@@ -58,19 +58,89 @@ make eval MODEL=gpt-4o EVAL=welsh-lexicon
 # Mae hf/auto yn canfod pa fodel mae'r gweinydd yn ei weini yn awtomatig
 make eval MODEL=hf/auto EVAL=welsh-lexicon
 
+# Unrhyw weinydd OpenAI-cyfatebol (vLLM, llama.cpp, ac ati)
+# Gosodwch HF_SERVER_URL i bwyntio at eich gweinydd
+HF_SERVER_URL=http://localhost:8000/v1 python -m deepeval_evals.run_all --model hf/auto
 ```
 
-## Yr evals sydd ar gael
+## Yr evals sydd ar gael / Available evals
 
-| Eval | Metrig | Disgrifiad |
-|------|--------|------------|
-| `welsh-lexicon` | accuracy | Adnabod geiriau Cymraeg |
-| `welsh-grammar` | accuracy | Gramadeg Cymraeg |
-| `welsh-yes-no` | accuracy | Ateb cwestiynau ie/na yn Gymraeg |
-| `welsh-obscenities` | accuracy | Adnabod rhegfeydd Cymraeg |
-| `welsh-bilingual-placenames` | accuracy | Cyfieithu enwau lleoedd |
-| `welsh-legislation-translation` | BLEU | Cyfieithu deddfwriaeth Saesneg-Cymraeg |
-| `welsh-registers` | accuracy | Adnabod cofrestrau iaith |
-| `welsh-mmlu-lite` | accuracy | Cwestiynau aml-ddewis MMLU yn Gymraeg |
-| `welsh-toxigen` | accuracy | Adnabod iaith wenwynig Cymraeg |
-| `welsh-arc-easy-mini-cy` | accuracy | Cwestiynau gwyddoniaeth aml-ddewis ARC-Easy yn Gymraeg |
+| Eval | Metrig / Metric | Samplau / Samples | Disgrifiad (CY) | Description (EN) |
+|------|-----------------|-------------------|------------------|------------------|
+| `welsh-lexicon` | accuracy | 14,083 | Adnabod geiriau Cymraeg | Recognising Welsh words |
+| `welsh-grammar` | accuracy | 991 | Gramadeg Cymraeg | Welsh grammar |
+| `welsh-yes-no` | accuracy | 268 | Ateb cwestiynau ie/na yn Gymraeg | Answering yes/no questions in Welsh |
+| `welsh-obscenities` | accuracy | 230 | Adnabod rhegfeydd Cymraeg | Recognising Welsh profanities |
+| `welsh-bilingual-placenames` | accuracy | 660 | Cyfieithu enwau lleoedd | Translating place names |
+| `welsh-legislation-translation` | BLEU | 3,003 | Cyfieithu deddfwriaeth Saesneg-Cymraeg | English-to-Welsh legislation translation |
+| `welsh-registers` | accuracy | 875 | Adnabod cofrestrau iaith | Recognising language registers |
+| `welsh-mmlu-lite` | accuracy | 400 | Cwestiynau aml-ddewis MMLU yn Gymraeg | MMLU multiple-choice questions in Welsh |
+| `welsh-toxigen` | accuracy | 905 | Adnabod iaith wenwynig Cymraeg | Recognising toxic Welsh language |
+| `welsh-arc-easy-mini-cy` | accuracy | 50 | Cwestiynau gwyddoniaeth aml-ddewis ARC-Easy yn Gymraeg | ARC-Easy science multiple-choice questions in Welsh |
+
+---
+
+# English
+
+An evaluation suite for testing the capabilities of large language models (LLMs) in Welsh. Uses [DeepEval](https://deepeval.com/) with [LiteLLM](https://docs.litellm.ai/) to support any model provider (OpenAI, Anthropic, Ollama, etc.).
+
+## Getting started
+
+### 1. Set up an Ollama server (for open models)
+
+See `infra/ollama/README.md` for full instructions. In short:
+
+```bash
+# On your Linux server with a GPU:
+cd infra/ollama
+make up           # Start Ollama
+make pull         # Download llama3 (8B) + llama3.2:1b
+make test         # Quick test
+```
+
+### 2. Test the pipeline with llama3
+
+Ensure `openai.env` contains:
+
+```
+OLLAMA_API_BASE=http://ollama:11434
+```
+
+Build the Docker image and run a small test to verify everything works:
+
+```bash
+make eval MODEL=ollama/llama3 EVAL=welsh-obscenities MAX_SAMPLES=10
+```
+
+If that works, run a full eval:
+
+```bash
+make eval MODEL=ollama/llama3 EVAL=welsh-obscenities
+```
+
+Or all evals at once:
+
+```bash
+make eval MODEL=ollama/llama3
+```
+
+### 3. Using other models
+
+```bash
+# OpenAI (requires OPENAI_API_KEY in openai.env)
+python -m deepeval_evals.run_all --model gpt-4o --eval welsh-lexicon
+
+# Anthropic (requires ANTHROPIC_API_KEY in openai.env)
+python -m deepeval_evals.run_all --model anthropic/claude-sonnet-4-20250514 --eval welsh-lexicon
+
+# Or via Docker
+make eval MODEL=gpt-4o EVAL=welsh-lexicon
+
+# Local HuggingFace server (see infra/hf-server)
+# hf/auto automatically detects which model the server is serving
+make eval MODEL=hf/auto EVAL=welsh-lexicon
+
+# Any OpenAI-compatible server (vLLM, llama.cpp, etc.)
+# Set HF_SERVER_URL to point at your server
+HF_SERVER_URL=http://localhost:8000/v1 python -m deepeval_evals.run_all --model hf/auto
+```

@@ -29,11 +29,13 @@ BASE_DIR = os.path.join(os.path.dirname(__file__), "..", "evals-cymraeg")
 EVALS = {
     "welsh-lexicon": {
         "jsonl": "welsh-lexicon/data/welsh-lexicon/samples.jsonl",
-        "metric": "exact_match"
+        "metric": "exact_match",
+        "max_tokens": 10
     },
     "welsh-grammar": {
         "jsonl": "welsh-grammar/data/welsh-grammar/samples.jsonl",
-        "metric": "exact_match"
+        "metric": "exact_match",
+        "max_tokens": 10
     },
     "welsh-yes-no": {
         "jsonl": "welsh-yes-no/data/welsh-yes-no/samples.jsonl",
@@ -41,7 +43,8 @@ EVALS = {
     },
     "welsh-obscenities": {
         "jsonl": "welsh-obscenities/data/welsh-obscenities/samples.jsonl",
-        "metric": "exact_match"
+        "metric": "exact_match",
+        "max_tokens": 10
     },
     "welsh-bilingual-placenames": {
         "jsonl": "welsh-bilingual-placenames/data/welsh-bilingual-placenames/samples.jsonl",
@@ -53,7 +56,8 @@ EVALS = {
     },
     "welsh-registers": {
         "jsonl": "welsh-registers/data/welsh-registers/samples.jsonl",
-        "metric": "exact_match"
+        "metric": "exact_match",
+        "max_tokens": 10
     },
     "welsh-mmlu-lite": {
         "jsonl": "welsh-mmlu-lite/data/welsh-mmlu-lite/samples.jsonl",
@@ -62,7 +66,8 @@ EVALS = {
     },
     "welsh-toxigen": {
         "jsonl": "welsh-toxigen/data/welsh-toxigen/samples.jsonl",
-        "metric": "exact_match"
+        "metric": "exact_match",
+        "max_tokens": 10
     },
     "welsh-arc-easy-mini-cy": {
         "jsonl": "welsh-arc-easy-mini-cy/data/welsh-arc-easy-mini-cy/samples.jsonl",
